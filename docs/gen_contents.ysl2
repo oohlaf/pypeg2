@@ -1,0 +1,8 @@
+include yslt.yml2
+
+stylesheet {
+    param "file";
+    template "/page" div class=contents menu apply "h2|h3";
+    template "h2" li em a href="{$file}.html#{@id}" value ".";
+    template "h3" li a href="{$file}.html#{@id}" value ".";
+}
