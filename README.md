@@ -1,4 +1,3 @@
-==============================
 pyPEG 2 for Python 2.7 and 3.x
 ==============================
 
@@ -9,18 +8,18 @@ purposes like XML and string templates.
 But sometimes you may want to have your own parser. This is what's pyPEG for.
 And pyPEG supports Unicode. 
 
-The source code for all you can find on bitbucket:
+The source code for all you can find here:
 
-https://bitbucket.org/fdik/pypeg/
+[https://gitea.pep.foundation/fdik/pypeg2]()
 
 To build the documentation, you'll need YML 2. You can download YML here:
 
-Homepage:   http://fdik.org/yml/
-Toolchain:  http://fdik.org/yml2.tar.bz2
+Homepage:   [http://fdik.org/yml/]()
+Toolchain:  [http://fdik.org/yml2.tar.bz2]()
 
 You can install pyPEG 2 with:
 
-    pip install pypeg2
+    $ pip install pypeg2
 
-pyPEG 2 depends on lxml, see http://lxml.de/
+pyPEG 2 depends on lxml, see [http://lxml.de/]()
 
