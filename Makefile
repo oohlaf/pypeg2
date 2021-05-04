@@ -1,6 +1,6 @@
 PYTHON=python3.3
 
-.PHONY: docs test_docs clean push dist test register deploy
+.PHONY: docs test_docs clean dist test register deploy
 
 docs:
 	$(MAKE) -C docs
@@ -23,9 +23,6 @@ test_docs:
 clean:
 	$(MAKE) -C docs clean
 	rm -Rf dist MANIFEST docs.zip pyPEG2.tar.gz pyPEG2-*.tar.gz
-
-push:
-	hg push ssh://hg@bitbucket.org/fdik/pyPEG
 
 dist: docs
 	$(PYTHON) setup.py sdist
