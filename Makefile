@@ -1,4 +1,4 @@
-PYTHON=python3.3
+PYTHON=python3
 
 .PHONY: docs test_docs clean dist test register deploy
 
