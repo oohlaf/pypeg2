@@ -236,6 +236,23 @@ class Literal(object):
             else:
                 return False
 
+class Str:
+    """A mutable string like object"""
+
+    def __init__(self, value, name=None, **kwargs):
+        logger.debug(f"New Str({value})")
+        self.data = str(value)
+        if name is not None:
+            self.name = Symbol(name)
+        for k, v in kwargs:
+            setattr(self, k, v)
+
+    def __repr__(self):
+        """x.__repr__() <==> repr(x)"""
+        try:
+            return self.__class__.__name__ + f"(name={self.name}, data={self.data})"
+        except AttributeError:
+            return self.__class__.__name__ + f"(data={self.data})"
 
 class Plain(object):
     """A plain object"""
