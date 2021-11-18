@@ -16,6 +16,9 @@ try:
 except NameError:
     pass
 
+import logging
+
+logger = logging.getLogger("pyPEG2")
 
 __version__ = 2.15
 __author__ = "Volker Birk"
@@ -167,6 +170,7 @@ class RegEx(object):
     """
 
     def __init__(self, value, **kwargs):
+        logger.debug(f"New Regex({value})")
         self.regex = re.compile(value, re.U)
         self.search = self.regex.search
         self.match = self.regex.match
@@ -199,6 +203,7 @@ class Literal(object):
     _basic_types = (bool, int, float, complex, str, bytes, bytearray, list,
             tuple, slice, set, frozenset, dict)
     def __init__(self, value, **kwargs):
+        logger.debug(f"New Literal({value})")
         if isinstance(self, Literal._basic_types):
             pass
         else:
@@ -239,6 +244,7 @@ class Plain(object):
         """Construct a plain object with an optional name and optional other
         attributes
         """
+        logger.debug(f"New Plain({name})")
         if name is not None:
             self.name = Symbol(name)
         for k, v in kwargs:
@@ -259,6 +265,7 @@ class List(list):
         """Construct a List, and construct its attributes from keyword
         arguments.
         """
+        logger.debug(f"New List({args}, {kwargs})")
         _args = []
         if len(args) == 1:
             if isinstance(args[0], str):
@@ -333,6 +340,7 @@ class Namespace(_UserDict):
         Arguments are being put into the Namespace, keyword arguments give the
         attributes of the Namespace.
         """
+        logger.debug(f"New Namespace({args}, {kwargs})")
         if args:
             self.data = OrderedDict(args)
         else:
@@ -387,6 +395,7 @@ class Enum(Namespace):
 
     def __init__(self, *things, **kwargs):
         """Construct an Enum using a tuple of things."""
+        logger.debug(f"New Enum({things})")
         self.data = OrderedDict()
         for thing in things:
             if type(thing) == str:
@@ -435,6 +444,7 @@ class Symbol(str):
             TypeError       if namespace is given and not a Namespace
         """
 
+        logger.debug(f"New Symbol({name})")
         if Symbol.check_keywords and name in Keyword.table:
             raise ValueError(repr(name)
                     + " is a Keyword, but is used as a Symbol")
@@ -657,6 +667,7 @@ def parse(text, thing, filename=None, whitespace=whitespace, comment=None,
                     if grammar contains an illegal cardinality value
     """
 
+    logger.debug(f"parse({repr(text)}, {thing})")
     parser = Parser()
     parser.whitespace = whitespace
     parser.comment = comment
@@ -693,6 +704,7 @@ def compose(thing, grammar=None, indent="    ", autoblank=True):
                     if grammar contains an illegal cardinality value
     """
 
+    logger.debug(f"compose({thing}, {grammar})")
     parser = Parser()
     parser.indent = indent
     parser.autoblank = autoblank
@@ -729,7 +741,7 @@ class Parser(object):
                             attribute instead of dumping them
     """
 
-    def __init__(self):
+    def __init__(self, name=None):
         """Initialize instance variables to their defaults."""
         self.whitespace = whitespace
         self.comment = None
@@ -744,6 +756,12 @@ class Parser(object):
         self._got_endl = True
         self._contiguous = False
         self._got_regex = False
+        self._name = hex(id(self)) if name is None else name
+        logger.debug(f"New Parser(name={name})")
+
+    @property
+    def name(self):
+        return self._name
 
     def clear_memory(self, thing=None):
         """Clear cache memory for packrat parsing.
@@ -784,6 +802,7 @@ class Parser(object):
                             if grammar contains an illegal cardinality value
         """
 
+        logger.debug(f"Parser({self.name}).parse({repr(text)}, {thing})")
         self.text = text
         if filename:
             self.filename = filename
@@ -807,6 +826,7 @@ class Parser(object):
 
     def _skip(self, text, pos=None):
         # Skip whitespace and comments from input text
+        logger.debug(f"Parser({self.name})._skip({repr(text)}, {pos})")
         t2 = None
         t = text
         result = []
@@ -854,15 +874,17 @@ class Parser(object):
     def _parse(self, text, thing, pos=[1, 0]):
         # Parser implementation
 
+        logger.debug(f"Parser({self.name})._parse([{type(thing)}]: {repr(text)}, {thing}, {pos})")
         def update_pos(text, t, pos):
             # Calculate where we are in the text
-            if not pos:
-                return
-            if text == t:
-                return
-            d_text = text[:len(text) - len(t)]
-            pos[0] += d_text.count("\n")
-            pos[1] += len(d_text)
+            old_pos = pos
+            if pos and text != t:
+                d_text = text[:len(text) - len(t)]
+                pos[0] += d_text.count("\n")
+                pos[1] += len(d_text)
+
+            logger.debug(f"Parser({self.name})._parse.update_pos(" + f"{pos})" if old_pos == pos else f"{old_pos}->{pos})")
+
 
         try:
             return self._memory[id(thing)][text]
@@ -913,7 +935,7 @@ class Parser(object):
                 result = t, r
                 update_pos(text, t, pos)
             else:
-                result = text, syntax_error("expecting " + repr(thing))
+                result = text, syntax_error("expecting " + repr(thing) + f" in '{text}'")
 
         elif isinstance(thing, (RegEx, _RegEx)):
             m = thing.match(text)
@@ -924,7 +946,7 @@ class Parser(object):
                 update_pos(text, t, pos)
             else:
                 result = text, syntax_error("expecting match on "
-                        + thing.pattern)
+                        + thing.pattern + f" in '{text}'")
 
         elif isinstance(thing, (str, Literal)):
             if text.startswith(str(thing)):
@@ -933,7 +955,7 @@ class Parser(object):
                 result = t, r
                 update_pos(text, t, pos)
             else:
-                result = text, syntax_error("expecting " + repr(thing))
+                result = text, syntax_error("expecting " + repr(thing) + f" in '{text}'")
 
         elif _issubclass(thing, Symbol):
             m = thing.regex.match(text)
@@ -961,7 +983,7 @@ class Parser(object):
                     result = t, r
                     update_pos(text, t, pos)
             else:
-                result = text, syntax_error("expecting " + thing.__name__)
+                result = text, syntax_error("expecting " + thing.__name__ + f" in '{text}'")
 
         # non-terminal constructs
 
@@ -1273,6 +1295,7 @@ class Parser(object):
             GrammarValueError
                             if grammar contains an illegal cardinality value
         """
+        logger.debug(f"Parser({self.name}).compose({thing}, {grammar})")
         if __debug__:
             # make sure that we're not having this typing error
             compose = None
