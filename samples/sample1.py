@@ -13,31 +13,31 @@ Because function has a name() in its grammar, we can access this now as an
 attribute. With Python 2.7 this gives Symbol(u'f'), with Python 3.2 it gives Symbol('f'):
 
 >>> f.name
-Symbol(...'f')
+Symbol('f')
 
 A Function has an Attribute "parms" in its grammar, which directs to class
 Parameters.
 
->>> f.parms
-Parameters([(Symbol(...'a'), <__main__.Parameter object at 0x...>), (Symbol(...'b'), <__main__.Parameter object at 0x...>), ])
+>>> f.parms # doctest: +ELLIPSIS
+Parameters([(Symbol('a'), Symbol(a[int]) at 0x...), (Symbol('b'), Symbol(b[long]) at 0x...), ])
 
 Because Parameters is a Namespace, we can access its content by name.
 
->>> f.parms["a"]
-<__main__.Parameter object at 0x...>
+>>> f.parms["a"] # doctest: +ELLIPSIS
+Symbol(a[int]) at 0x...
 
 Its content are Parameter instances. Parameter has an Attribute "typing".
 
 >>> f.parms["b"].typing
-Type(...'long')
+Type('long')
 
 The Instructions of our small sample are just words. Because Function is a
 List, we can access them one by one.
 
 >>> f
-Function([...'do_this', ...'do_that'], name=Symbol(...'f'))
+Function(['do_this', 'do_that'], name=Symbol('f'))
 >>> print("f is " + repr(f[0]))
-f is ...'do_this'
+f is 'do_this'
 
 The result can be composed to a text again.
 
@@ -52,7 +52,7 @@ int f(int a, long b)
     /* on level 1 */
     do_something_else;
 }
-...
+<BLANKLINE>
 
 pyPEG contains an XML backend, too:
 
@@ -62,13 +62,13 @@ pyPEG contains an XML backend, too:
 >>> print(xml.decode())
 <Function typing="int" name="f">
   <Parameters>
-    <Parameter typing="int" name="a"/>
-    <Parameter typing="long" name="b"/>
+    <Parameter typing="int" name="a" />
+    <Parameter typing="long" name="b" />
   </Parameters>
   <Instruction>do_this</Instruction>
   <Instruction>do_that</Instruction>
 </Function>
-...
+
 
 The XML backend can read XML text and create things:
 
@@ -76,13 +76,13 @@ The XML backend can read XML text and create things:
 >>> xml = b'<Function typing="long" name="g"><Parameters><Parameter name="x" typing="int"/></Parameters><Instruction>return</Instruction></Function>'
 >>> g = xml2thing(xml, globals())
 >>> g.name
-Symbol(...'g')
+Symbol('g')
 >>> g.typing
-Type(...'long')
+Type('long')
 >>> g.parms["x"].typing
-Type(...'int')
+Type('int')
 >>> print("g[0] is " + repr(g[0]))
-g[0] is ...'return'
+g[0] is 'return'
 """
 
 from __future__ import unicode_literals, print_function
@@ -101,6 +101,10 @@ class Type(Keyword):
 
 class Parameter(object):
     grammar = attr("typing", Type), blank, name()
+
+    # We pretty print parameters to remove the class instance name as that can be inconsistent
+    def __repr__(self):
+        return f"Symbol({self.name}[{self.typing}]) at 0x{hex(id(self))}"
 
 # A Namespace is a container for named things.
 # csl() creates the grammar for a comma separated list.
