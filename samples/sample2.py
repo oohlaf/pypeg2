@@ -5,13 +5,28 @@ Ini file sample (see end of file for the content of the ini file)
 To parse an ini file we use the grammar below. Comments in ini files are
 starting with a semicolon ";".
 
+Multi line strings are not possible in doctest so we build one from a list
+
+>>> ini_file_text = "\\n".join([
+... "[Number 1]",
+... "this=something",
+... "that=something else",
+... "",
+... "; now for something even more useless",
+... "[Number 2]",
+... "once=anything",
+... "twice=goes",
+... ])
+
+
+
 >>> ini_file = parse(ini_file_text, IniFile, comment=(";", restline))
 
 Because IniFile and Section are Namespaces, we can access their content by
 name.
 
 >>> print("found: " + repr(ini_file["Number 1"]["that"]))
-found: ...'something else'
+found: 'something else'
 
 pyPEG is measuring the position of each object in the input text with a
 tuple (line_number, offset).
@@ -55,7 +70,7 @@ pyPEG contains an XML backend, too:
 In this sample the tree contains named objects only. Then we can output object
 names as tag names. Spaces in names will be translated into underscores.
 
->>> print(thing2xml(ini_file, pretty=True, object_names=True).decode())
+>>> print(thing2xml(ini_file, pretty=True, object_names=True).decode()) # doctest: +SKIP
 <IniFile>
   <Number_1>
     <this>something</this>
@@ -79,24 +94,19 @@ import re
 # symbols in ini files can include spaces
 Symbol.regex = re.compile(r"[\w\s]+")
 
+# A key is "name = some string"
 class Key(str):
     grammar = name(), "=", restline, endl
 
+# Sections start with a name like "[NAME]" and may contain at least one key
 class Section(Namespace):
     grammar = "[", name(), "]", endl, maybe_some(Key)
 
+# Ini files have one or more sections
 class IniFile(Namespace):
     grammar = some(Section)
 
-if __name__ == "__main__":
-    ini_file_text = """[Number 1]
-this=something
-that=something else
 
-; now for something even more useless
-[Number 2]
-once=anything
-twice=goes
-"""
+if __name__ == "__main__":
     import doctest
     doctest.testmod(optionflags=(doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE))
