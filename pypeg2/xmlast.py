@@ -126,6 +126,7 @@ def thing2xml(thing, pretty=False, object_names=False):
             if pretty:
                 warnings.warn("lxml is needed for pretty printing",
                         ImportWarning)
+        etree.indent(tree)
         return etree.tostring(tree)
 
 
