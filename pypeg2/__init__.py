@@ -1443,8 +1443,13 @@ class Parser(object):
                                         if card < 1:
                                             break
                                     elif isinstance(g, attr.Class):
-                                        text.append(self.compose(getattr(thing,
-                                            g.name), g.thing, attr_of=thing))
+                                        if g.subtype == "Flag":
+                                            if getattr(thing, g.name):
+                                                text.append(self.compose(getattr(thing,
+                                                    g.name), g.thing, attr_of=thing))
+                                        else:
+                                            text.append(self.compose(getattr(thing,
+                                                g.name), g.thing, attr_of=thing))
                                         if card < 1:
                                             break
                                     elif isinstance(g, (tuple, list)):
