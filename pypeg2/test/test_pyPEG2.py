@@ -344,6 +344,21 @@ class ComposeListTestCase(ComposeTestCase):
         t = pypeg2.compose(x)
         self.assertEqual(t, "hello")
 
+class ComposeListFlag(pypeg2.List):
+    grammar = ":", pypeg2.flag("mark", pypeg2.K("MARK"))
+
+class ComposeFlagTrueSubtypeTestCase(ComposeTestCase):
+    def runTest(self):
+        r = pypeg2.parse(":MARK", ComposeListFlag)
+        t = pypeg2.compose(r)
+        self.assertEqual(t, ":MARK")
+
+class ComposeFlagFalseSubtypeTestCase(ComposeTestCase):
+    def runTest(self):
+        r = pypeg2.parse(":", ComposeListFlag)
+        t = pypeg2.compose(r)
+        self.assertEqual(t, ":")
+
 class ComposeIntTestCase(ComposeTestCase):
     def runTest(self):
         x = pypeg2.compose(23, int)
